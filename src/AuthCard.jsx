@@ -12,26 +12,16 @@ const cardVariants = {
 };
 
 const formVariants = {
-    enter: (dir) => ({
-        x: dir > 0 ? 60 : -60,
-        opacity: 0,
-    }),
-    center: {
-        x: 0,
-        opacity: 1,
-        transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
-    },
-    exit: (dir) => ({
-        x: dir > 0 ? -60 : 60,
-        opacity: 0,
-        transition: { duration: 0.25, ease: [0.55, 0, 1, 0.45] }
-    })
+    enter: (dir) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
+    center: { x: 0, opacity: 1, transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } },
+    exit: (dir) => ({ x: dir > 0 ? -60 : 60, opacity: 0, transition: { duration: 0.25, ease: [0.55, 0, 1, 0.45] } })
 };
 
-export default function AuthCard() {
-    const [mode, setMode] = useState('login'); // 'login' | 'register' | 'success'
+export default function AuthCard({ onLoginSuccess }) {
+    const [mode, setMode] = useState('login');
     const [direction, setDirection] = useState(1);
     const [successData, setSuccessData] = useState(null);
+    const [cardGlowing, setCardGlowing] = useState(false);
 
     const switchTo = (newMode) => {
         setDirection(newMode === 'register' ? 1 : -1);
@@ -43,9 +33,17 @@ export default function AuthCard() {
         setMode('success');
     };
 
+    // Called by LoginForm on successful auth — triggers glow before redirect
+    const handleLoginSuccess = () => {
+        setCardGlowing(true);
+        setTimeout(() => {
+            onLoginSuccess(); // triggers page dissolve in App.jsx
+        }, 600);
+    };
+
     return (
         <motion.div
-            className="auth-card"
+            className={`auth-card${cardGlowing ? ' auth-card--success-glow' : ''}`}
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -73,19 +71,12 @@ export default function AuthCard() {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.15, type: 'spring', stiffness: 260, damping: 18 }}
-                        >
-                            ✓
-                        </motion.div>
+                        >✓</motion.div>
                         <h2>Welcome aboard! 🎉</h2>
-                        <p>
-                            Your account has been created successfully.<br />
+                        <p>Your account has been created.<br />
                             <strong style={{ color: '#a78bfa' }}>{successData?.name}</strong>, you're all set!
                         </p>
-                        <button
-                            className="submit-btn"
-                            style={{ marginTop: '1.5rem' }}
-                            onClick={() => switchTo('login')}
-                        >
+                        <button className="submit-btn" style={{ marginTop: '1.5rem' }} onClick={() => switchTo('login')}>
                             Sign in to your account →
                         </button>
                     </motion.div>
@@ -93,22 +84,15 @@ export default function AuthCard() {
                     <motion.div key={mode} custom={direction} variants={formVariants} initial="enter" animate="center" exit="exit">
                         {/* Tab Switcher */}
                         <div className="tab-switcher">
-                            <button
-                                className={`tab-btn ${mode === 'login' ? 'active' : ''}`}
-                                onClick={() => switchTo('login')}
-                            >
-                                Sign In
-                            </button>
-                            <button
-                                className={`tab-btn ${mode === 'register' ? 'active' : ''}`}
-                                onClick={() => switchTo('register')}
-                            >
-                                Create Account
-                            </button>
+                            <button className={`tab-btn ${mode === 'login' ? 'active' : ''}`} onClick={() => switchTo('login')}>Sign In</button>
+                            <button className={`tab-btn ${mode === 'register' ? 'active' : ''}`} onClick={() => switchTo('register')}>Create Account</button>
                         </div>
 
                         {mode === 'login' ? (
-                            <LoginForm onSwitchToRegister={() => switchTo('register')} />
+                            <LoginForm
+                                onSwitchToRegister={() => switchTo('register')}
+                                onLoginSuccess={handleLoginSuccess}
+                            />
                         ) : (
                             <RegisterForm
                                 onSwitchToLogin={() => switchTo('login')}

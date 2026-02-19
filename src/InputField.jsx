@@ -9,6 +9,7 @@ export default function InputField({
     icon,
     isPassword = false,
     disabled = false,
+    error = false,
 }) {
     const [showPw, setShowPw] = useState(false);
     const inputType = isPassword ? (showPw ? 'text' : 'password') : type;
@@ -19,7 +20,7 @@ export default function InputField({
             <div className="input-wrapper">
                 <span className="input-icon">{icon}</span>
                 <input
-                    className={`form-input${isPassword ? ' has-toggle' : ''}`}
+                    className={`form-input${isPassword ? ' has-toggle' : ''}${error ? ' form-input--error' : ''}`}
                     type={inputType}
                     placeholder={placeholder}
                     value={value}

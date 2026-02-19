@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './supabaseClient';
 import InputField from './InputField';
-import SubmitButton from './SubmitButton';
 import FeedbackMessage from './FeedbackMessage';
 
-export default function LoginForm({ onSwitchToRegister }) {
+export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [feedback, setFeedback] = useState(null); // { type: 'error'|'success', message: '' }
+    const [loginSuccess, setLoginSuccess] = useState(false);
+    const [feedback, setFeedback] = useState(null);
+    const [shakeKey, setShakeKey] = useState(0); // increment to re-trigger shake
+
+    const triggerShake = useCallback(() => {
+        setShakeKey((k) => k + 1);
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,14 +23,17 @@ export default function LoginForm({ onSwitchToRegister }) {
         // Basic validation
         if (!email.trim() || !password.trim()) {
             setFeedback({ type: 'error', message: 'Please fill in all fields.' });
+            triggerShake();
             return;
         }
         if (!/\S+@\S+\.\S+/.test(email)) {
             setFeedback({ type: 'error', message: 'Please enter a valid email address.' });
+            triggerShake();
             return;
         }
         if (password.length < 6) {
             setFeedback({ type: 'error', message: 'Password must be at least 6 characters.' });
+            triggerShake();
             return;
         }
 
@@ -33,19 +41,40 @@ export default function LoginForm({ onSwitchToRegister }) {
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
+
+            // ✅ Auth successful — trigger success animation sequence
+            setLoginSuccess(true);
             setFeedback({ type: 'success', message: `Welcome back! Signed in as ${data.user.email}` });
+
+            // Wait for success animation, then tell parent to start page dissolve
+            setTimeout(() => {
+                onLoginSuccess();
+            }, 700);
+
         } catch (err) {
-            const msg = err.message === 'Invalid login credentials'
-                ? 'Invalid email or password. Please try again.'
-                : err.message || 'Sign in failed. Please try again.';
+            const msg =
+                err.message === 'Invalid login credentials'
+                    ? 'Invalid email or password. Please try again.'
+                    : err.message || 'Sign in failed. Please try again.';
             setFeedback({ type: 'error', message: msg });
+            triggerShake();
         } finally {
-            setLoading(false);
+            if (!loginSuccess) setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} noValidate>
+        <motion.form
+            key={shakeKey}
+            onSubmit={handleSubmit}
+            noValidate
+            animate={
+                shakeKey > 0
+                    ? { x: [0, -10, 10, -8, 8, -4, 4, 0] }
+                    : { x: 0 }
+            }
+            transition={{ duration: 0.45, ease: 'easeInOut' }}
+        >
             <InputField
                 label="Email Address"
                 type="email"
@@ -53,7 +82,8 @@ export default function LoginForm({ onSwitchToRegister }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 icon="✉"
-                disabled={loading}
+                disabled={loading || loginSuccess}
+                error={feedback?.type === 'error'}
             />
             <InputField
                 label="Password"
@@ -63,21 +93,55 @@ export default function LoginForm({ onSwitchToRegister }) {
                 onChange={(e) => setPassword(e.target.value)}
                 icon="🔑"
                 isPassword
-                disabled={loading}
+                disabled={loading || loginSuccess}
+                error={feedback?.type === 'error'}
             />
 
-            <SubmitButton loading={loading} label="Sign In" loadingLabel="Signing in…" />
+            {/* Animated Submit Button */}
+            <motion.button
+                type="submit"
+                className={`submit-btn${loginSuccess ? ' submit-btn--success' : ''}`}
+                disabled={loading || loginSuccess}
+                whileHover={!loading && !loginSuccess ? { scale: 1.015, y: -2 } : {}}
+                whileTap={!loading && !loginSuccess ? { scale: 0.99 } : {}}
+                animate={loginSuccess ? { scale: [1, 1.04, 1] } : {}}
+                transition={{ duration: 0.3 }}
+            >
+                <span className="btn-content">
+                    {loginSuccess ? (
+                        <motion.span
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                            className="btn-success-check"
+                        >
+                            ✓ Authenticated!
+                        </motion.span>
+                    ) : loading ? (
+                        <>
+                            <span className="spinner" />
+                            Signing in…
+                        </>
+                    ) : (
+                        'Sign In'
+                    )}
+                </span>
+            </motion.button>
 
-            {feedback && (
-                <FeedbackMessage type={feedback.type} message={feedback.message} />
+            <AnimatePresence mode="wait">
+                {feedback && (
+                    <FeedbackMessage key={feedback.message} type={feedback.type} message={feedback.message} />
+                )}
+            </AnimatePresence>
+
+            {!loginSuccess && (
+                <p className="auth-footer">
+                    Don't have an account?{' '}
+                    <button type="button" onClick={onSwitchToRegister}>
+                        Create one free →
+                    </button>
+                </p>
             )}
-
-            <p className="auth-footer">
-                Don't have an account?{' '}
-                <button type="button" onClick={onSwitchToRegister}>
-                    Create one free →
-                </button>
-            </p>
-        </form>
+        </motion.form>
     );
 }

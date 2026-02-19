@@ -532,3 +532,116 @@ body {
     font-size: 1.3rem;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEW — Login Redirect Animation System
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Error Input — Red glow border ────────────────────────────────── */
+.form-input--error {
+  border-color: rgba(248, 113, 113, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15), 0 0 14px rgba(248, 113, 113, 0.1) !important;
+  background: rgba(248, 113, 113, 0.06) !important;
+}
+
+.form-input--error+.input-focus-line {
+  background: linear-gradient(90deg, #f87171, #fca5a5) !important;
+  transform: scaleX(1);
+}
+
+/* ─── Card Success Glow Pulse ───────────────────────────────────────── */
+.auth-card--success-glow {
+  animation: cardSuccessGlow 0.6s ease-in-out forwards;
+  border-color: rgba(52, 211, 153, 0.5) !important;
+}
+
+@keyframes cardSuccessGlow {
+  0% {
+    box-shadow: var(--glass-shadow), 0 0 0 0.5px rgba(255, 255, 255, 0.05) inset;
+  }
+
+  30% {
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.2), 0 0 60px rgba(52, 211, 153, 0.25), 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  60% {
+    box-shadow: 0 0 0 12px rgba(52, 211, 153, 0.08), 0 0 80px rgba(52, 211, 153, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  100% {
+    box-shadow: 0 0 0 18px rgba(52, 211, 153, 0.0), 0 0 40px rgba(52, 211, 153, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ─── Success Button ────────────────────────────────────────────────── */
+.submit-btn--success {
+  background: linear-gradient(135deg, #059669, #10b981, #34d399) !important;
+  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.5) !important;
+  animation: successBtnPulse 0.5s ease-out;
+}
+
+@keyframes successBtnPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.045);
+    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.18), 0 4px 24px rgba(16, 185, 129, 0.5);
+  }
+
+  70% {
+    transform: scale(0.98);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn-success-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Page Dissolve Overlay ─────────────────────────────────────────── */
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(ellipse at center,
+      rgba(16, 185, 129, 0.15) 0%,
+      rgba(15, 12, 41, 0.98) 60%,
+      #0f0c29 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Redirecting Indicator ─────────────────────────────────────────── */
+.redirecting-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: rgba(241, 245, 249, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.redirect-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(52, 211, 153, 0.2);
+  border-top-color: #34d399;
+  border-right-color: rgba(52, 211, 153, 0.6);
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.25);
+}
